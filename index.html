@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!-- /* 
+ * Copyright (C) 2015 Mevlüt Canvar <info@mcnvr.com>
+ *
+ * TCMB XML ÖDEVİ: 2015/2016 Güz Dönemi Web Servisleri Ödevi(Sunucu Tabanlı)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */ -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	
+    <meta name="description" content="TCMB Webservice Usage">
+    <meta name="author" content="Mevlüt Canvar">
+    <link rel="icon" href="favicon.ico">
+
+    <title>Exchange Rates of The Central Bank of Turkey</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="css/jumbotron-narrow.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="container">
+		<div class="header clearfix">
+		<h3 class="text-muted">Exchange Rates of The Central Bank of Turkey</h3>
+		</div>
+		
+		<div class="row">
+			<div class="jumbotron">
+				<form class="form-signin" id="postform">
+					<h2 class="form-signin-heading">Currency Code:</h2>
+					<input type="text" id="currencyCode" name="currencyCode" maxlength="3" class="form-control" placeholder="USD, EUR etc." required autofocus>
+					<br />
+					<button class="btn btn-lg btn-primary btn-block" type="submit" id="startPost">Run</button>
+				</form>
+				<div class="alert alert-success" style="display: none" id="response" role="alert">
+				</div>
+				<div class="alert alert-danger text-left" style="display: none" id="errordiv" role="alert">
+				</div>
+			</div>
+		</div><!--/row-->
+		<div class="row">
+			<div class="col-lg-12 text-center">
+				<span class="label label-default"><strong>USD</strong>: US Dollar</span>
+				<span class="label label-primary"><strong>AUD</strong>: Australian Dollar</span>
+				<span class="label label-success"><strong>DKK</strong>: Danish Krone</span>
+				<span class="label label-info"><strong>EUR</strong>: Euro</span>
+				<span class="label label-warning"><strong>GBP</strong>: British Pound</span>
+				<span class="label label-danger"><strong>CHF</strong>: Swiss Franc</span>
+				<span class="label label-info"><strong>SEK</strong>: Swedish Krona</span>
+				<span class="label label-warning"><strong>CAD</strong>: Canadian Dollar</span>
+				<span class="label label-danger"><strong>KWD</strong>: Kuwaiti Dinar</span>
+				<span class="label label-default"><strong>NOK</strong>: Norwegian Krone</span>
+				<span class="label label-primary"><strong>SAR</strong>: Saudi Arabian Riyal</span>
+				<span class="label label-success"><strong>JPY</strong>: Japanese Yen</span>
+				<span class="label label-info"><strong>BGN</strong>: Bulgarian Lev</span>
+				<span class="label label-warning"><strong>RON</strong>: Romanian New Leu</span>
+				<span class="label label-danger"><strong>RUB</strong>: Russian Ruble</span>
+				<span class="label label-info"><strong>IRR</strong>: Iranian Rial</span>
+				<span class="label label-default"><strong>CNY</strong>: Chinese Yuan Renminbi</span>
+				<span class="label label-primary"><strong>PKR</strong>: Pakistani Rupee</span>
+			</div>
+		</div><!--/row-->
+		
+		<br />
+		<small>This page is using a <a href="TCMBRates.asmx" target="_blank">web service</a> which is getting exchange rates from TCMB's <a href="http://www.tcmb.gov.tr/kurlar/today.xml" download>xml</a> resurce.</small>
+		
+		<footer class="footer">
+		<p>&copy; Mevlüt Canvar, 2015 2nd Web Services HW, Faculty of Engineering / Karabük University</p>
+		</footer>
+
+		<script src="js/jquery.min.js"></script>
+		<script>
+		// Variable to hold request 
+		var request;
+
+		// Bind to the submit event of our form
+		$("#postform").submit(function(event){
+
+			// Abort any pending request
+			if (request) {
+				request.abort();
+			}
+			// setup some local variables
+			var $form = $(this);
+
+			// Let's select and cache all the fields
+			var $inputs = $form.find("input, select, button, textarea");
+			$("#startPost").html("Loading...")
+			
+			// Serialize the data in the form
+			var serializedData = $form.serialize();
+
+			// Let's disable the inputs for the duration of the Ajax request.
+			// Note: we disable elements AFTER the form data has been serialized.
+			// Disabled form elements will not be serialized.
+			$inputs.prop("disabled", true);
+
+			// Fire off the request to /form.php
+			request = $.ajax({
+				url: window.location.protocol + "//" + window.location.hostname + window.location.pathname + "TCMBRates.asmx/getCurrency",
+				type: "post",
+				data: serializedData
+			});
+
+			// Callback handler that will be called on success
+			request.done(function (response, textStatus, jqXHR){				
+				$("#response").css('display','block');
+				
+				$(response).find('Currency').each(function(){
+					var getCCode = $(this).attr('CurrencyCode');
+					var getCName = $(this).find('CurrencyName').text();
+					var getCUnit = $(this).find('Unit').text();
+					var getCFBuying = $(this).find('ForexBuying').text();
+					var getCFSelling = $(this).find('ForexSelling').text();
+					var getCBBuying = $(this).find('BanknoteBuying').text();
+					var getCBSelling = $(this).find('BanknoteSelling').text();
+					$( "#response" ).empty();
+					$("<div>").html( "<strong>Currency Code: </strong><span>"+getCCode+" </span>"+
+						"<strong>Name: </strong><span>"+getCName+" </span>"+
+						"<strong>Unit: </strong><span>"+getCUnit+" </span>"+
+						"<strong>Forex Buying: </strong><span>"+getCFBuying+" </span>"+
+						"<strong>Forex Selling: </strong><span>"+getCFSelling+" </span>"+
+						"<strong>Banknote Buying: </strong><span>"+getCBBuying+" </span>"+
+						"<strong>Banknote Selling: </strong><span>"+getCBSelling+" </span>").appendTo("#response");
+						
+				});
+			});
+
+			// Callback handler that will be called on failure
+			request.fail(function (jqXHR, textStatus, errorThrown){
+				// Log the error to the console
+				console.error(
+					"The following error occurred: "+
+					textStatus, errorThrown
+				);
+				
+				$("#errordiv").css('display','block');
+				
+				if(window.location.protocol != "http:")
+					var fullUrl = "http://YOUR_HOST_NAME_WITH_PATH/";
+				else
+					var fullUrl = window.location.protocol + "//" + window.location.hostname + window.location.pathname;
+					
+				$( "#errordiv" ).empty();
+				$("<div>").html("<strong>Warning! </strong>"+errorThrown+"<br /><strong>Info: </strong>Be sure that the web service file(TCMBRates.asmx) is running on a windows server or localhost which have VBScript(Classic ASP) support.<br />"+
+									"And Also check the TCMBRates.asmx file POST path variable 'url'. It should be <code>"+fullUrl+"TCMBRates.asmx/getCurrency</code> if you did not move the service file.").appendTo("#errordiv");
+						
+			});
+
+			// Callback handler that will be called regardless
+			// if the request failed or succeeded
+			request.always(function () {
+				// Reenable the inputs
+				$inputs.prop("disabled", false);
+				$("#startPost").html("Run");
+			});
+
+			// Prevent default posting of form
+			event.preventDefault();
+		});
+		</script>
+	</div> <!-- /container -->
+  </body>
+</html>
